@@ -1,0 +1,7 @@
+[package]
+name = "cldap"
+version = "0.1.0"
+authors = ["Ross Delinger <rossdylan@csh.rit.edu>"]
+
+[dependencies]
+libc = "0.2.10"
