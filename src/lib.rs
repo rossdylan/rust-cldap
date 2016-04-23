@@ -2,15 +2,20 @@ extern crate libc;
 use libc::{c_int, c_uchar, c_char};
 use std::ptr;
 use std::ffi::CStr;
-use std::mem;
 
+pub mod codes;
 
 #[repr(C)]
 struct LDAP;
+
 #[repr(C)]
 struct LDAPMessage;
+
 #[repr(C)]
 struct timeval;
+
+#[repr(C)]
+struct LDAPControl;
 
 
 #[link(name = "ldap")]
@@ -40,7 +45,7 @@ impl RustLDAP {
             let cldap = Box::from_raw(ptr::null_mut());
             let ldap_ptr_ptr: *const *mut LDAP = &Box::into_raw(cldap);
             let res = ldap_initialize(ldap_ptr_ptr, uri.as_ptr());
-            if res != 0 {
+            if res != codes::Results::LDAP_SUCCESS {
                 let raw_estr = ldap_err2string(res as c_int);
                 return Err(CStr::from_ptr(raw_estr)
                            .to_str()
