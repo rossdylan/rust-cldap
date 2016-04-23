@@ -111,3 +111,41 @@ pub mod Scopes {
     pub static LDAP_SCOPE_CHILDREN: i32                 = 0x0003;
     pub static LDAP_SCOPE_DEFAULT: i32                  = -1;
 }
+
+pub mod Versions {
+    pub static LDAP_VERSION1: i32                       = 1;
+    pub static LDAP_VERSION2: i32                       = 2;
+    pub static LDAP_VERSION3: i32                       = 3;
+}
+
+pub mod Options {
+    pub static LDAP_OPT_API_INFO: i32                   = 0x0000;
+    pub static LDAP_OPT_DESC: i32                       = 0x0001;
+    pub static LDAP_OPT_DEREF: i32                      = 0x0002;
+    pub static LDAP_OPT_SIZELIMIT: i32                  = 0x0003;
+    pub static LDAP_OPT_TIMELIMIT: i32                  = 0x0004;
+    /* 0x05 - 0x07 are undefined */
+    pub static LDAP_OPT_REFERRALS: i32                  = 0x0008;
+    pub static LDAP_OPT_RESTART: i32                    = 0x0009;
+    /* 0x0a - 0x10 are undefined */
+    pub static LDAP_OPT_PROTOCOL_VERSION: i32           = 0x0011;
+    pub static LDAP_OPT_SERVER_CONTROLS: i32            = 0x0012;
+    pub static LDAP_OPT_CLIENT_CONTROLS: i32            = 0x0013;
+    /* 0x14 is undefined */
+    pub static LDAP_OPT_API_FEATURE_INFO: i32           = 0x0015;
+    /* 0x16 - 0x2f are undefined */
+    pub static LDAP_OPT_HOST_NAME: i32                  = 0x0030;
+    pub static LDAP_OPT_RESULT_CODE: i32                = 0x0031;
+    pub static LDAP_OPT_ERROR_NUMBER: i32               = 0x0031;
+    pub static LDAP_OPT_DIAGNOSTIC_MESSAGE: i32         = 0x0032;
+    pub static LDAP_OPT_ERROR_STRING: i32               = 0x0032;
+    pub static LDAP_OPT_MATCHED_DN: i32                 = 0x0033;
+    /* 0x0034 - 0x3fff are undefined */
+    pub static LDAP_OPT_SSPI_FLAGS: i32                 = 0x0092;
+    pub static LDAP_OPT_SIGN: i32                       = 0x0095;
+    pub static LDAP_OPT_ENCRYPT: i32                    = 0x0096;
+    pub static LDAP_OPT_SASL_METHOD: i32                = 0x0097;
+    pub static LDAP_OPT_SECURITY_CONTEXT: i32           = 0x0099;
+
+    pub static LDAP_OPT_API_EXTENSION_BASE: i32         = 0x4000;
+}
