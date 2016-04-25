@@ -1,5 +1,5 @@
 /// Re-export protocol result codes from ldap.h
-pub mod Results {
+pub mod results {
     pub static LDAP_SUCCESS: i32                        = 0x00;
     pub static LDAP_OPERATIONS_ERROR: i32               = 0x01;
     pub static LDAP_PROTOCOL_ERROR: i32                 = 0x02;
@@ -56,7 +56,7 @@ pub mod Results {
     pub static LDAP_OTHER: i32                          = 0x50;
 }
 
-pub mod Errors {
+pub mod errors {
     /// Re-export api errors codes
     pub static LDAP_SERVER_DOWN: i32                    = -1;
     pub static LDAP_LOCAL_ERROR: i32                    = -2;
@@ -78,7 +78,7 @@ pub mod Errors {
     pub static LDAP_X_CONNECTING: i32                   = -18;
 }
 
-pub mod Filters {
+pub mod filters {
     pub static LDAP_FILTER_AND: u32                     = 0xa0;
     pub static LDAP_FILTER_OR: u32                      = 0xa1;
     pub static LDAP_FILTER_NOT: u32                     = 0xa2;
@@ -100,7 +100,7 @@ pub mod Filters {
     pub static LDAP_SUBSTRING_FINAL: u32                = 0x82;
 }
 
-pub mod Scopes {
+pub mod scopes {
     pub static LDAP_SCOPE_BASE: i32                     = 0x0000;
     pub static LDAP_SCOPE_BASEOBJECT: i32               = 0x0000;
     pub static LDAP_SCOPE_ONELEVEL: i32                 = 0x0001;
@@ -112,13 +112,13 @@ pub mod Scopes {
     pub static LDAP_SCOPE_DEFAULT: i32                  = -1;
 }
 
-pub mod Versions {
+pub mod versions {
     pub static LDAP_VERSION1: i32                       = 1;
     pub static LDAP_VERSION2: i32                       = 2;
     pub static LDAP_VERSION3: i32                       = 3;
 }
 
-pub mod Options {
+pub mod options {
     pub static LDAP_OPT_API_INFO: i32                   = 0x0000;
     pub static LDAP_OPT_DESC: i32                       = 0x0001;
     pub static LDAP_OPT_DEREF: i32                      = 0x0002;
