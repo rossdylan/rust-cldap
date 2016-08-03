@@ -13,7 +13,7 @@ struct LDAP;
 #[repr(C)]
 struct LDAPMessage;
 #[repr(C)]
-struct LDAPControl;
+pub struct LDAPControl;
 #[repr(C)]
 struct BerElement;
 
@@ -93,7 +93,7 @@ impl RustLDAP {
 
     /// Expose a not very 'rust-y' api for ldap_search_ext_s. Ideally this will
     /// be used mainly internally and a simpler api is exposed to users.
-    fn ldap_search(&self, base: &str, scope: i32, filter: Option<&str>, attrs: Option<Vec<&str>>, attrsonly: bool,
+    pub fn ldap_search(&self, base: &str, scope: i32, filter: Option<&str>, attrs: Option<Vec<&str>>, attrsonly: bool,
 					serverctrls: Option<*const *const LDAPControl>, clientctrls: Option<*const *const LDAPControl>,
 					timeout: *const timeval, sizelimit: i32)
 					-> Result<Vec<HashMap<String,Vec<String>>>, &str> {
