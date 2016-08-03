@@ -13,7 +13,7 @@ struct LDAP;
 #[repr(C)]
 struct LDAPMessage;
 #[repr(C)]
-struct LDAPControl;
+pub struct LDAPControl;
 #[repr(C)]
 struct BerElement;
 
