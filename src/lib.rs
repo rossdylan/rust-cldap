@@ -109,12 +109,22 @@ impl RustLDAP {
             None    => ptr::null()
         };
 
-        let r_attrs = match attrs {
-            Some(avec) => avec.iter().map(|a| {
-				CString::new(*a).unwrap().as_ptr() as *const c_uchar
-			}).collect::<Vec<*const c_uchar>>().as_ptr(),
-            None => ptr::null()
-        };
+        let mut r_attrs: *const *const c_uchar = ptr::null();
+        
+        let mut c_strs: Vec<CString> = Vec::new();
+        let mut r_attrs_ptrs: Vec<*const c_uchar> = Vec::new();
+
+        if let Some(strs) = attrs {
+            for string in strs {
+
+                //create new CString and take ownership of it in c_strs
+                c_strs.push(CString::new(string).unwrap());
+
+                //create a pointer to that CString's raw data and store it in r_attrs
+                r_attrs_ptrs.push(c_strs[c_strs.len() - 1].as_ptr() as *const c_uchar);
+            }
+            r_attrs = r_attrs_ptrs.as_ptr();
+        }
 
         let r_serverctrls = match serverctrls {
             Some(sc) => sc,
