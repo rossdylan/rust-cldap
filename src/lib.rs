@@ -103,9 +103,14 @@ impl RustLDAP {
         // make sure the box is deallocated
         let ldap_msg = unsafe { Box::from_raw(ptr::null_mut()) };
         let raw_msg: *const *mut LDAPMessage = &Box::into_raw(ldap_msg);
+        
+        let filter_cstr: CString;
 
         let r_filter = match filter {
-            Some(fs) => fs.as_ptr(),
+            Some(fs) => {
+                filter_cstr = CString::new(fs).unwrap();
+                filter_cstr.as_ptr() as *const u8
+            },
             None    => ptr::null()
         };
 
@@ -137,8 +142,10 @@ impl RustLDAP {
             None => ptr::null()
         };
 
+        let base = CString::new(base).unwrap();
+
         let res: i32 = unsafe { ldap_search_ext_s(self.ldap_ptr,
-                                                  base.as_ptr(),
+                                                  base.as_ptr() as *const u8,
                                                   scope as c_int,
                                                   r_filter,
                                                   r_attrs,
