@@ -61,7 +61,9 @@ impl RustLDAP {
         unsafe {
             let cldap = Box::from_raw(ptr::null_mut());
             let ldap_ptr_ptr: *const *mut LDAP = &Box::into_raw(cldap);
-            let res = ldap_initialize(ldap_ptr_ptr, uri.as_ptr());
+			let uri_cstring = CString::new(uri).unwrap();
+			let uri_ptr = uri_cstring.as_ptr() as *const u8;
+            let res = ldap_initialize(ldap_ptr_ptr, uri_ptr);
             if res != codes::results::LDAP_SUCCESS {
                 let raw_estr = ldap_err2string(res as c_int);
                 return Err(CStr::from_ptr(raw_estr)
