@@ -221,7 +221,7 @@ mod tests {
 	const test_address: &'static str 				= "ldap://ldap.forumsys.com";
 	const test_bind_dn: &'static str 				= "cn=read-only-admin,dc=example,dc=com";
 	const test_bind_pass: &'static str				= "password";
-	const test_simple_search_query: &'static str 	= "uid=euler,ou=mathematicians,dc=example,dc=com";
+	const test_simple_search_query: &'static str 	= "uid=tesla,dc=example,dc=com";
 	const test_search_base: &'static str 			= "ou=mathematicians,dc=example,dc=com";
 	const test_search_filter: &'static str 			= "(cn=euler)";
 
