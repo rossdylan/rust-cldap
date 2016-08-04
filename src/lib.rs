@@ -223,7 +223,8 @@ mod tests {
 	const TEST_BIND_PASS: &'static str				= "password";
 	const TEST_SIMPLE_SEARCH_QUERY: &'static str 	= "uid=tesla,dc=example,dc=com";
 	const TEST_SEARCH_BASE: &'static str 			= "ou=mathematicians,dc=example,dc=com";
-	const TEST_SEARCH_FILTER: &'static str 			= "(cn=euler)";
+	const TEST_SEARCH_FILTER: &'static str 			= "(uid=euler)";
+	const TEST_SEARCH_INVALID_FILTER: &'static str	= "(uid=INVALID)";
 
     /// Test creating a RustLDAP struct with a valid uri.
     #[test]
@@ -266,6 +267,9 @@ mod tests {
         let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
         let search_res = ldap.simple_search(TEST_SIMPLE_SEARCH_QUERY, codes::scopes::LDAP_SCOPE_BASE).unwrap();
 
+		//make sure we got something back
+		assert!(search_res.len() == 1);
+
 		for result in search_res {
 			println!("simple search result: {:?}", result);
 			for (key, value) in result {
@@ -287,6 +291,9 @@ mod tests {
         let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
 											None, false, None, None, ptr::null(), -1).unwrap();
 
+		//make sure we got something back
+		assert!(search_res.len() == 1);
+
 		for result in search_res {
 			println!("search result: {:?}", result);
 			for (key, value) in result {
@@ -300,6 +307,20 @@ mod tests {
 	}
 
 	#[test]
+	fn test_invalid_search(){
+
+		println!("Testing search");
+		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
+		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
+		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_INVALID_FILTER),
+											None, false, None, None, ptr::null(), -1).unwrap();
+
+		//make sure we got something back
+		assert!(search_res.len() == 0);
+
+	}
+
+	#[test]
 	fn test_search_attrs(){
 
 		println!("Testing search with attrs");
@@ -308,6 +329,9 @@ mod tests {
 		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
 		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
 											Some(test_search_attrs_vec), false, None, None, ptr::null(), -1).unwrap();
+
+		//make sure we got something back
+		assert!(search_res.len() == 1);
 
 		for result in search_res {
 			println!("attrs search result: {:?}", result);
