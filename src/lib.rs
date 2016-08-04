@@ -218,18 +218,18 @@ mod tests {
 	use std::ptr;
     use codes;
 
-	const test_address: &'static str 				= "ldap://ldap.forumsys.com";
-	const test_bind_dn: &'static str 				= "cn=read-only-admin,dc=example,dc=com";
-	const test_bind_pass: &'static str				= "password";
-	const test_simple_search_query: &'static str 	= "uid=tesla,dc=example,dc=com";
-	const test_search_base: &'static str 			= "ou=mathematicians,dc=example,dc=com";
-	const test_search_filter: &'static str 			= "(cn=euler)";
+	const TEST_ADDRESS: &'static str 				= "ldap://ldap.forumsys.com";
+	const TEST_BIND_DN: &'static str 				= "cn=read-only-admin,dc=example,dc=com";
+	const TEST_BIND_PASS: &'static str				= "password";
+	const TEST_SIMPLE_SEARCH_QUERY: &'static str 	= "uid=tesla,dc=example,dc=com";
+	const TEST_SEARCH_BASE: &'static str 			= "ou=mathematicians,dc=example,dc=com";
+	const TEST_SEARCH_FILTER: &'static str 			= "(cn=euler)";
 
     /// Test creating a RustLDAP struct with a valid uri.
     #[test]
     fn test_ldap_new(){
 
-        let _ = super::RustLDAP::new(test_address).unwrap();
+        let _ = super::RustLDAP::new(TEST_ADDRESS).unwrap();
 
     }
 
@@ -252,8 +252,8 @@ mod tests {
     #[test]
     fn test_simple_bind(){
 
-        let ldap = super::RustLDAP::new(test_address).unwrap();
-        let res = ldap.simple_bind(test_bind_dn, test_bind_pass).unwrap();
+        let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
+        let res = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
         println!("{:?}", res);
 
     }
@@ -262,9 +262,9 @@ mod tests {
     fn test_simple_search(){
 
         println!("Testing simple search");
-        let ldap = super::RustLDAP::new(test_address).unwrap();
-        let _ = ldap.simple_bind(test_bind_dn, test_bind_pass).unwrap();
-        let search_res = ldap.simple_search(test_simple_search_query, codes::scopes::LDAP_SCOPE_BASE).unwrap();
+        let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
+        let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
+        let search_res = ldap.simple_search(TEST_SIMPLE_SEARCH_QUERY, codes::scopes::LDAP_SCOPE_BASE).unwrap();
 		println!("{:?}", search_res);
 
     }
@@ -273,10 +273,23 @@ mod tests {
 	fn test_search(){
 
 		println!("Testing simple search");
-        let ldap = super::RustLDAP::new(test_address).unwrap();
-        let _ = ldap.simple_bind(test_bind_dn, test_bind_pass).unwrap();
-        let search_res = ldap.ldap_search(test_search_base, codes::scopes::LDAP_SCOPE_SUB, Some(test_search_filter),
+        let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
+        let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
+        let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
 											None, false, None, None, ptr::null(), -1).unwrap();
+		println!("{:?}", search_res);
+
+	}
+
+	#[test]
+	fn test_search_attrs(){
+
+		println!("Testing simple search");
+		let test_search_attrs_vec = vec!["cn", "sn", "mail"];
+		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
+		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
+		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
+											Some(test_search_attrs_vec), false, None, None, ptr::null(), -1).unwrap();
 		println!("{:?}", search_res);
 
 	}
