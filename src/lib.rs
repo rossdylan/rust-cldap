@@ -123,6 +123,7 @@ impl RustLDAP {
                 //create a pointer to that CString's raw data and store it in r_attrs
                 r_attrs_ptrs.push(c_strs[c_strs.len() - 1].as_ptr() as *const c_uchar);
             }
+            r_attrs_ptrs.push(ptr::null()); //ensure that there is a null value at the end of the vec
             r_attrs = r_attrs_ptrs.as_ptr();
         }
 
