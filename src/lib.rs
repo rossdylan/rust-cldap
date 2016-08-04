@@ -43,15 +43,34 @@ extern {
                          attrsonly: c_int, serverctrls: *const *const LDAPControl,
                          clientctrls: *const *const LDAPControl, timeout: *const timeval,
                          sizelimit: c_int, res: *const *mut LDAPMessage) -> c_int;
+
+	fn ldap_unbind_ext_s(ldap: *const LDAP, sctrls: *const *const LDAPControl, cctrls: *const *const LDAPControl) -> c_int;
 }
 
 pub struct RustLDAP {
-    // Have a heap allocated box for our LDAP instance
-    _ldap: Box<LDAP>,
     // Have the raw pointer to it so we can pass it into internal functions
-    ldap_ptr: *const LDAP,
+    ldap_ptr: *const LDAP
 }
 
+impl Drop for RustLDAP {
+
+	fn drop(&mut self){
+
+		//unbind the LDAP connection, making the C library free the LDAP*
+		let rc = unsafe { ldap_unbind_ext_s(self.ldap_ptr, ptr::null(), ptr::null()) };
+
+		//make sure it actually happened
+		if rc != codes::results::LDAP_SUCCESS {
+			unsafe { //hopefully this never happens
+				let raw_estr = ldap_err2string(rc as c_int);
+				panic!(CStr::from_ptr(raw_estr).to_owned().into_string().unwrap());
+			}
+
+		}
+
+	}
+
+}
 
 impl RustLDAP {
     /// Create a new RustLDAP struct and use an ffi call to ldap_initialize to
@@ -71,8 +90,7 @@ impl RustLDAP {
                 return Err(CStr::from_ptr(raw_estr).to_owned().into_string().unwrap());
             }
             let new_ldap = RustLDAP {
-                _ldap: Box::from_raw(*ldap_ptr_ptr),
-                ldap_ptr: *ldap_ptr_ptr,
+                ldap_ptr: *ldap_ptr_ptr
             };
             return Ok(new_ldap);
         }
