@@ -62,7 +62,7 @@ impl RustLDAP {
             let cldap = Box::from_raw(ptr::null_mut());
             let ldap_ptr_ptr: *const *mut LDAP = &Box::into_raw(cldap);
 			let uri_cstring = CString::new(uri).unwrap();
-			let uri_ptr = uri_cstring.as_ptr() as *const u8;
+			let uri_ptr = uri_cstring.as_ptr() as *const c_uchar;
             let res = ldap_initialize(ldap_ptr_ptr, uri_ptr);
             if res != codes::results::LDAP_SUCCESS {
                 let raw_estr = ldap_err2string(res as c_int);
@@ -81,7 +81,11 @@ impl RustLDAP {
     /// Perform a synchronos simple bind (ldap_simple_bind_s). The result is
     /// either Ok(LDAP_SUCCESS) or Err(ldap_err2string).
     pub fn simple_bind(&self, who: &str, pass: &str) -> Result<i64, &str> {
-        let res = unsafe { ldap_simple_bind_s(self.ldap_ptr, who.as_ptr(), pass.as_ptr()) as i64};
+		let who_cstr = CString::new(who).unwrap();
+		let who_ptr = who_cstr.as_ptr() as *const c_uchar;
+		let pass_cstr = CString::new(pass).unwrap();
+		let pass_ptr = pass_cstr.as_ptr() as *const c_uchar;
+        let res = unsafe { ldap_simple_bind_s(self.ldap_ptr, who_ptr, pass_ptr) as i64};
         if res < 0 {
             let raw_estr = unsafe { ldap_err2string(res as c_int) };
             return Err(unsafe { CStr::from_ptr(raw_estr).to_str().unwrap() });
@@ -147,7 +151,7 @@ impl RustLDAP {
         let base = CString::new(base).unwrap();
 
         let res: i32 = unsafe { ldap_search_ext_s(self.ldap_ptr,
-                                                  base.as_ptr() as *const u8,
+                                                  base.as_ptr() as *const c_uchar,
                                                   scope as c_int,
                                                   r_filter,
                                                   r_attrs,
