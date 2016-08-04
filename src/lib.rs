@@ -103,7 +103,7 @@ impl RustLDAP {
         // make sure the box is deallocated
         let ldap_msg = unsafe { Box::from_raw(ptr::null_mut()) };
         let raw_msg: *const *mut LDAPMessage = &Box::into_raw(ldap_msg);
-        
+
         let filter_cstr: CString;
 
         let r_filter = match filter {
@@ -115,7 +115,7 @@ impl RustLDAP {
         };
 
         let mut r_attrs: *const *const c_uchar = ptr::null();
-        
+
         let mut c_strs: Vec<CString> = Vec::new();
         let mut r_attrs_ptrs: Vec<*const c_uchar> = Vec::new();
 
@@ -212,59 +212,71 @@ impl RustLDAP {
 
 #[cfg(test)]
 mod tests {
+
+	use std::ptr;
     use codes;
+
+	const test_address: &'static str 				= "ldap://ldap.forumsys.com";
+	const test_bind_dn: &'static str 				= "cn=read-only-admin,dc=example,dc=com";
+	const test_bind_pass: &'static str				= "password";
+	const test_simple_search_query: &'static str 	= "uid=euler,ou=mathematicians,dc=example,dc=com";
+	const test_search_base: &'static str 			= "ou=mathematicians,dc=example,dc=com";
+	const test_search_filter: &'static str 			= "(cn=euler)";
+
     /// Test creating a RustLDAP struct with a valid uri.
     #[test]
-    fn test_ldap_new() {
-        let ldap = super::RustLDAP::new("ldap://ldapproxy1.csh.rit.edu");
-        match ldap {
-            Ok(_) => assert!(true),
-            Err(_) => {
-                assert!(false);
-            }
-        }
+    fn test_ldap_new(){
+
+        let _ = super::RustLDAP::new(test_address).unwrap();
+
     }
 
     /// Test creating a RustLDAP struct with an invalid uri.
     #[test]
-    fn test_invalid_ldap_new() {
-        let ldap = super::RustLDAP::new("lda://localhost");
-        match ldap {
-            Ok(_) => assert!(false),
-            Err(es) => {
-                assert_eq!("Bad parameter to an ldap routine", es);
-            }
-        }
+    fn test_invalid_ldap_new(){
+
+		if let Err(e) = super::RustLDAP::new("lda://localhost"){
+
+			assert_eq!("Bad parameter to an ldap routine", e);
+
+		} else {
+
+			assert!(false);
+
+		}
+
     }
 
     #[test]
-    fn test_simple_bind() {
-        let ldap_res = super::RustLDAP::new("ldaps://ldap.csh.rit.edu");
-        match ldap_res {
-            Ok(ldap) => {
-                let res = ldap.simple_bind("uid=test4,ou=Users,dc=csh,dc=rit,dc=edu", "fakepass");
-                println!("{:?}", res);
-            }
-            Err(_) => {
-                assert!(false);
-            }
-        }
+    fn test_simple_bind(){
+
+        let ldap = super::RustLDAP::new(test_address).unwrap();
+        let res = ldap.simple_bind(test_bind_dn, test_bind_pass).unwrap();
+        println!("{:?}", res);
+
     }
 
     #[test]
-    fn test_simple_search() {
-        println!("Testing search");
-        let ldap_res = super::RustLDAP::new("ldap://ldapproxy1.csh.rit.edu");
-        match ldap_res {
-            Ok(ldap) => {
-                let res = ldap.simple_bind("uid=test4,ou=Users,dc=csh,dc=rit,dc=edu", "fake");
-                println!("{:?}", res);
-                let search_res = ldap.simple_search("uid=rossdylan,ou=Users,dc=csh,dc=rit,dc=edu", codes::scopes::LDAP_SCOPE_BASE);
-                println!("{:?}", search_res);
-            }
-            Err(_) => {
-                assert!(false);
-            }
-        }
+    fn test_simple_search(){
+
+        println!("Testing simple search");
+        let ldap = super::RustLDAP::new(test_address).unwrap();
+        let _ = ldap.simple_bind(test_bind_dn, test_bind_pass).unwrap();
+        let search_res = ldap.simple_search(test_simple_search_query, codes::scopes::LDAP_SCOPE_BASE).unwrap();
+		println!("{:?}", search_res);
+
     }
+
+	#[test]
+	fn test_search(){
+
+		println!("Testing simple search");
+        let ldap = super::RustLDAP::new(test_address).unwrap();
+        let _ = ldap.simple_bind(test_bind_dn, test_bind_pass).unwrap();
+        let search_res = ldap.ldap_search(test_search_base, codes::scopes::LDAP_SCOPE_SUB, Some(test_search_filter),
+											None, false, None, None, ptr::null(), -1).unwrap();
+		println!("{:?}", search_res);
+
+	}
+
 }
