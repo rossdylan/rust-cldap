@@ -222,7 +222,7 @@ mod tests {
 	const TEST_BIND_DN: &'static str 				= "cn=read-only-admin,dc=example,dc=com";
 	const TEST_BIND_PASS: &'static str				= "password";
 	const TEST_SIMPLE_SEARCH_QUERY: &'static str 	= "uid=tesla,dc=example,dc=com";
-	const TEST_SEARCH_BASE: &'static str 			= "ou=mathematicians,dc=example,dc=com";
+	const TEST_SEARCH_BASE: &'static str 			= "dc=example,dc=com";
 	const TEST_SEARCH_FILTER: &'static str 			= "(uid=euler)";
 	const TEST_SEARCH_INVALID_FILTER: &'static str	= "(uid=INVALID)";
 
