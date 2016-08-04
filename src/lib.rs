@@ -254,7 +254,7 @@ mod tests {
 
         let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
         let res = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
-        println!("{:?}", res);
+        println!("Bind result: {:?}", res);
 
     }
 
@@ -265,32 +265,59 @@ mod tests {
         let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
         let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
         let search_res = ldap.simple_search(TEST_SIMPLE_SEARCH_QUERY, codes::scopes::LDAP_SCOPE_BASE).unwrap();
-		println!("{:?}", search_res);
+
+		for result in search_res {
+			println!("simple search result: {:?}", result);
+			for (key, value) in result {
+				println!("- key: {:?}", key);
+				for res_val in value {
+					println!("- - res_val: {:?}", res_val);
+				}
+			}
+		}
 
     }
 
 	#[test]
 	fn test_search(){
 
-		println!("Testing simple search");
+		println!("Testing search");
         let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
         let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
         let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
 											None, false, None, None, ptr::null(), -1).unwrap();
-		println!("{:?}", search_res);
+
+		for result in search_res {
+			println!("search result: {:?}", result);
+			for (key, value) in result {
+				println!("- key: {:?}", key);
+				for res_val in value {
+					println!("- - res_val: {:?}", res_val);
+				}
+			}
+		}
 
 	}
 
 	#[test]
 	fn test_search_attrs(){
 
-		println!("Testing simple search");
+		println!("Testing search with attrs");
 		let test_search_attrs_vec = vec!["cn", "sn", "mail"];
 		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
 		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
 		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
 											Some(test_search_attrs_vec), false, None, None, ptr::null(), -1).unwrap();
-		println!("{:?}", search_res);
+
+		for result in search_res {
+			println!("attrs search result: {:?}", result);
+			for (key, value) in result {
+				println!("- key: {:?}", key);
+				for res_val in value {
+					println!("- - res_val: {:?}", res_val);
+				}
+			}
+		}
 
 	}
 
