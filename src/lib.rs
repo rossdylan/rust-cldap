@@ -386,7 +386,6 @@ mod tests {
 	}
 
 	#[test]
-	#[should_panic]
 	fn test_search_invalid_attrs(){
 
 		println!("Testing search with invalid attrs");
@@ -396,6 +395,16 @@ mod tests {
 		let _ = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
 									Some(test_search_attrs_vec), false, None, None, ptr::null(), -1).unwrap();
 
+	}
+
+	for result in search_res {
+		println!("attrs search result: {:?}", result);
+		for (key, value) in result {
+			println!("- key: {:?}", key);
+			for res_val in value {
+				println!("- - res_val: {:?}", res_val);
+			}
+		}
 	}
 
 }
