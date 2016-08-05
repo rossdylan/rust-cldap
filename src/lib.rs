@@ -26,26 +26,26 @@ extern {
 #[link(name = "ldap")]
 #[allow(improper_ctypes)]
 extern {
-	fn ldap_initialize(ldap: *const *mut LDAP, uri: *const c_uchar) -> c_int;
-	fn ldap_memfree(p: *const c_void);
-	fn ldap_msgfree(msg: *const LDAPMessage) -> c_int;
+	fn ldap_initialize(ldap: *mut *mut LDAP, uri: *const c_uchar) -> c_int;
+	fn ldap_memfree(p: *mut c_void);
+	fn ldap_msgfree(msg: *mut LDAPMessage) -> c_int;
 	fn ldap_err2string(err: c_int) -> *const c_char;
-	fn ldap_first_entry(ldap: *const LDAP, result: *const LDAPMessage) -> *const LDAPMessage;
-	fn ldap_next_entry(ldap: *const LDAP, entry: *const LDAPMessage) -> *const LDAPMessage;
-	fn ldap_get_values(ldap: *const LDAP, entry: *const LDAPMessage, attr: *const c_char) -> *const *const c_char;
+	fn ldap_first_entry(ldap: *mut LDAP, result: *mut LDAPMessage) -> *mut LDAPMessage;
+	fn ldap_next_entry(ldap: *mut LDAP, entry: *mut LDAPMessage) -> *mut LDAPMessage;
+	fn ldap_get_values(ldap: *mut LDAP, entry: *mut LDAPMessage, attr: *const c_char) -> *const *const c_char;
 	fn ldap_count_values(vals: *const *const c_char) -> c_int;
 	fn ldap_value_free(vals: *const *const c_char);
 
-	fn ldap_simple_bind_s(ldap: *const LDAP, who: *const c_uchar, pass: *const c_uchar) -> c_int;
-	fn ldap_first_attribute(ldap: *const LDAP, entry: *const LDAPMessage, berptr: *const *const BerElement) -> *const c_char;
-	fn ldap_next_attribute(ldap: *const LDAP, entry: *const LDAPMessage, berptr: *const BerElement) -> *const c_char;
-	fn ldap_search_ext_s(ldap: *const LDAP, base: *const c_uchar, scope: c_int,
+	fn ldap_simple_bind_s(ldap: *mut LDAP, who: *const c_uchar, pass: *const c_uchar) -> c_int;
+	fn ldap_first_attribute(ldap: *mut LDAP, entry: *mut LDAPMessage, berptr: *mut *mut BerElement) -> *const c_char;
+	fn ldap_next_attribute(ldap: *mut LDAP, entry: *mut LDAPMessage, berptr: *mut BerElement) -> *const c_char;
+	fn ldap_search_ext_s(ldap: *mut LDAP, base: *const c_uchar, scope: c_int,
 						 filter: *const c_uchar, attrs: *const *const c_uchar,
-						 attrsonly: c_int, serverctrls: *const *const LDAPControl,
-						 clientctrls: *const *const LDAPControl, timeout: *const timeval,
-						 sizelimit: c_int, res: *const *mut LDAPMessage) -> c_int;
+						 attrsonly: c_int, serverctrls: *mut *mut LDAPControl,
+						 clientctrls: *mut *mut LDAPControl, timeout: *mut timeval,
+						 sizelimit: c_int, res: *mut *mut LDAPMessage) -> c_int;
 
-	fn ldap_unbind_ext_s(ldap: *const LDAP, sctrls: *const *const LDAPControl, cctrls: *const *const LDAPControl) -> c_int;
+	fn ldap_unbind_ext_s(ldap: *mut LDAP, sctrls: *mut *mut LDAPControl, cctrls: *mut *mut LDAPControl) -> c_int;
 }
 
 pub struct RustLDAP {
@@ -58,7 +58,7 @@ impl Drop for RustLDAP {
 	fn drop(&mut self){
 
 		//unbind the LDAP connection, making the C library free the LDAP*
-		let rc = unsafe { ldap_unbind_ext_s(self.ldap_ptr, ptr::null(), ptr::null()) };
+		let rc = unsafe { ldap_unbind_ext_s(self.ldap_ptr, ptr::null_mut(), ptr::null_mut()) };
 
 		//make sure it actually happened
 		if rc != codes::results::LDAP_SUCCESS {
@@ -122,14 +122,14 @@ impl RustLDAP {
 
 	/// Perform a simple search with only the base, returning all attributes found
 	pub fn simple_search(&self, base: &str, scope: i32) -> Result<Vec<HashMap<String,Vec<String>>>, String> {
-		return self.ldap_search(base, scope, None, None, false, None, None, ptr::null(), -1);
+		return self.ldap_search(base, scope, None, None, false, None, None, ptr::null_mut(), -1);
 	}
 
 	/// Expose a not very 'rust-y' api for ldap_search_ext_s. Ideally this will
 	/// be used mainly internally and a simpler api is exposed to users.
 	pub fn ldap_search(&self, base: &str, scope: i32, filter: Option<&str>, attrs: Option<Vec<&str>>, attrsonly: bool,
-					serverctrls: Option<*const *const LDAPControl>, clientctrls: Option<*const *const LDAPControl>,
-					timeout: *const timeval, sizelimit: i32)
+					serverctrls: Option<*mut *mut LDAPControl>, clientctrls: Option<*mut *mut LDAPControl>,
+					timeout: *mut timeval, sizelimit: i32)
 					-> Result<Vec<HashMap<String,Vec<String>>>, String> {
 
 		//Make room for the LDAPMessage, being sure to delete this before we return
@@ -167,11 +167,11 @@ impl RustLDAP {
 		//PAss in either the controlls or a null if none are specified
 		let r_serverctrls = match serverctrls {
 			Some(sc) => sc,
-			None => ptr::null()
+			None => ptr::null_mut()
 		};
 		let r_clientctrls = match clientctrls {
 			Some(cc) => cc,
-			None => ptr::null()
+			None => ptr::null_mut()
 		};
 
 		//Copy the search base into a C-string
@@ -191,16 +191,16 @@ impl RustLDAP {
 		//We now have to parse the results, copying the C-strings into Rust ones
 		//making sure to free the C-strings afterwards
 		let mut resvec: Vec<HashMap<String,Vec<String>>> = vec![];
-		let mut entry = unsafe { ldap_first_entry(self.ldap_ptr, *&mut ldap_msg) };
+		let mut entry = unsafe { ldap_first_entry(self.ldap_ptr, ldap_msg) };
 
 		while !entry.is_null() {
 
 			//Make the map holding the attribute : value pairs
 			//as well as the BerElement that keeps track of what position we're in
 			let mut map: HashMap<String,Vec<String>> = HashMap::new();
-			let ber: *const BerElement = ptr::null();
+			let mut ber: *mut BerElement = ptr::null_mut();
 			unsafe {
-				let mut attr: *const c_char = ldap_first_attribute(self.ldap_ptr, entry, &ber);
+				let mut attr: *const c_char = ldap_first_attribute(self.ldap_ptr, entry, &mut ber);
 
 				while !attr.is_null() {
 
@@ -222,7 +222,7 @@ impl RustLDAP {
 
 					//free the attr and value, then get next attr
 					ldap_value_free(raw_vals);
-					ldap_memfree(attr as *const c_void);
+					ldap_memfree(attr as *mut c_void);
 					attr = ldap_next_attribute(self.ldap_ptr, entry, ber)
 
 				}
@@ -239,7 +239,7 @@ impl RustLDAP {
 		}
 
 		//make sure we free the message and return the parsed results
-		unsafe { ldap_msgfree(*&mut ldap_msg) };
+		unsafe { ldap_msgfree(ldap_msg) };
 		return Ok(resvec);
 	}
 }
@@ -329,7 +329,7 @@ mod tests {
 		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
 		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
 		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
-											None, false, None, None, ptr::null(), -1).unwrap();
+											None, false, None, None, ptr::null_mut(), -1).unwrap();
 
 		//make sure we got something back
 		assert!(search_res.len() == 1);
@@ -353,7 +353,7 @@ mod tests {
 		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
 		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
 		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_INVALID_FILTER),
-											None, false, None, None, ptr::null(), -1).unwrap();
+											None, false, None, None, ptr::null_mut(), -1).unwrap();
 
 		//make sure we got something back
 		assert!(search_res.len() == 0);
@@ -368,7 +368,7 @@ mod tests {
 		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
 		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
 		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
-											Some(test_search_attrs_vec), false, None, None, ptr::null(), -1).unwrap();
+											Some(test_search_attrs_vec), false, None, None, ptr::null_mut(), -1).unwrap();
 
 		//make sure we got something back
 		assert!(search_res.len() == 1);
@@ -393,7 +393,7 @@ mod tests {
 		let ldap = super::RustLDAP::new(TEST_ADDRESS).unwrap();
 		let _ = ldap.simple_bind(TEST_BIND_DN, TEST_BIND_PASS).unwrap();
 		let search_res = ldap.ldap_search(TEST_SEARCH_BASE, codes::scopes::LDAP_SCOPE_SUB, Some(TEST_SEARCH_FILTER),
-											Some(test_search_attrs_vec), false, None, None, ptr::null(), -1).unwrap();
+											Some(test_search_attrs_vec), false, None, None, ptr::null_mut(), -1).unwrap();
 
 		for result in search_res {
 			println!("attrs search result: {:?}", result);
