@@ -86,7 +86,7 @@ impl RustLDAP {
 
 		unsafe {
 			//call ldap_initialize and check for errors
-			let res = ldap_initialize(&mut cldap, uri_cstring.as_ptr() as *const c_char);
+			let res = ldap_initialize(&mut cldap, uri_cstring.as_ptr());
 			if res != codes::results::LDAP_SUCCESS {
 				let raw_estr = ldap_err2string(res as c_int);
 				return Err(CStr::from_ptr(raw_estr).to_owned().into_string().unwrap());
@@ -101,17 +101,17 @@ impl RustLDAP {
 
 	/// Perform a synchronos simple bind (ldap_simple_bind_s). The result is
 	/// either Ok(LDAP_SUCCESS) or Err(ldap_err2string).
-	pub fn simple_bind(&self, who: &str, pass: &str) -> Result<i64, String> {
+	pub fn simple_bind(&self, who: &str, pass: &str) -> Result<i32, String> {
 
 		//convert arguments to C-strings
 		let who_cstr 	= CString::new(who).unwrap();
 		let pass_cstr 	= CString::new(pass).unwrap();
-		let who_ptr 	= who_cstr.as_ptr() as *const c_char;
-		let pass_ptr 	= pass_cstr.as_ptr() as *const c_char;
+		let who_ptr 	= who_cstr.as_ptr();
+		let pass_ptr 	= pass_cstr.as_ptr();
 
 		//call ldap_bind and check for errors
 		unsafe {
-			let res = ldap_simple_bind_s(self.ldap_ptr, who_ptr, pass_ptr) as i64;
+			let res = ldap_simple_bind_s(self.ldap_ptr, who_ptr, pass_ptr);
 			if res < 0 {
 				let raw_estr = ldap_err2string(res as c_int);
 				return Err(CStr::from_ptr(raw_estr).to_owned().into_string().unwrap());
@@ -128,9 +128,8 @@ impl RustLDAP {
 	/// Expose a not very 'rust-y' api for ldap_search_ext_s. Ideally this will
 	/// be used mainly internally and a simpler api is exposed to users.
 	pub fn ldap_search(&self, base: &str, scope: i32, filter: Option<&str>, attrs: Option<Vec<&str>>, attrsonly: bool,
-					serverctrls: Option<*mut *mut LDAPControl>, clientctrls: Option<*mut *mut LDAPControl>,
-					timeout: *mut timeval, sizelimit: i32)
-					-> Result<Vec<HashMap<String,Vec<String>>>, String> {
+						serverctrls: Option<*mut *mut LDAPControl>, clientctrls: Option<*mut *mut LDAPControl>,
+						timeout: *mut timeval, sizelimit: i32) -> Result<Vec<HashMap<String,Vec<String>>>, String> {
 
 		//Make room for the LDAPMessage, being sure to delete this before we return
 		let mut ldap_msg = ptr::null_mut();;
@@ -158,7 +157,7 @@ impl RustLDAP {
 				c_strs.push(CString::new(string).unwrap());
 
 				//create a pointer to that CString's raw data and store it in r_attrs
-				r_attrs_ptrs.push(c_strs[c_strs.len() - 1].as_ptr() as *const c_char);
+				r_attrs_ptrs.push(c_strs[c_strs.len() - 1].as_ptr());
 			}
 			r_attrs_ptrs.push(ptr::null()); //ensure that there is a null value at the end of the vec
 			r_attrs = r_attrs_ptrs.as_ptr();
@@ -179,9 +178,8 @@ impl RustLDAP {
 
 		//call into the C library and check for error
 		unsafe {
-			let res: i32 = ldap_search_ext_s(self.ldap_ptr, base.as_ptr() as *const c_char, scope as c_int,
-												r_filter, r_attrs, attrsonly as c_int, r_serverctrls,
-												r_clientctrls, timeout, sizelimit as c_int, &mut ldap_msg);
+			let res: i32 = ldap_search_ext_s(self.ldap_ptr, base.as_ptr(), scope as c_int, r_filter, r_attrs, attrsonly as c_int,
+												r_serverctrls, r_clientctrls, timeout, sizelimit as c_int, &mut ldap_msg);
 			if res != codes::results::LDAP_SUCCESS {
 				let raw_estr = ldap_err2string(res as c_int);
 				return Err(CStr::from_ptr(raw_estr).to_owned().into_string().unwrap());
