@@ -1,5 +1,5 @@
 extern crate libc;
-use libc::{c_int, c_uchar, c_char, c_void, timeval};
+use libc::{c_int, c_char, c_void, timeval};
 use std::ptr;
 use std::ffi::{CStr, CString};
 use std::collections::HashMap;
@@ -26,7 +26,7 @@ extern {
 #[link(name = "ldap")]
 #[allow(improper_ctypes)]
 extern {
-	fn ldap_initialize(ldap: *mut *mut LDAP, uri: *const c_uchar) -> c_int;
+	fn ldap_initialize(ldap: *mut *mut LDAP, uri: *const c_char) -> c_int;
 	fn ldap_memfree(p: *mut c_void);
 	fn ldap_msgfree(msg: *mut LDAPMessage) -> c_int;
 	fn ldap_err2string(err: c_int) -> *const c_char;
@@ -36,11 +36,11 @@ extern {
 	fn ldap_count_values(vals: *const *const c_char) -> c_int;
 	fn ldap_value_free(vals: *const *const c_char);
 
-	fn ldap_simple_bind_s(ldap: *mut LDAP, who: *const c_uchar, pass: *const c_uchar) -> c_int;
+	fn ldap_simple_bind_s(ldap: *mut LDAP, who: *const c_char, pass: *const c_char) -> c_int;
 	fn ldap_first_attribute(ldap: *mut LDAP, entry: *mut LDAPMessage, berptr: *mut *mut BerElement) -> *const c_char;
 	fn ldap_next_attribute(ldap: *mut LDAP, entry: *mut LDAPMessage, berptr: *mut BerElement) -> *const c_char;
-	fn ldap_search_ext_s(ldap: *mut LDAP, base: *const c_uchar, scope: c_int,
-						 filter: *const c_uchar, attrs: *const *const c_uchar,
+	fn ldap_search_ext_s(ldap: *mut LDAP, base: *const c_char, scope: c_int,
+						 filter: *const c_char, attrs: *const *const c_char,
 						 attrsonly: c_int, serverctrls: *mut *mut LDAPControl,
 						 clientctrls: *mut *mut LDAPControl, timeout: *mut timeval,
 						 sizelimit: c_int, res: *mut *mut LDAPMessage) -> c_int;
@@ -86,7 +86,7 @@ impl RustLDAP {
 
 		unsafe {
 			//call ldap_initialize and check for errors
-			let res = ldap_initialize(&mut cldap, uri_cstring.as_ptr() as *const c_uchar);
+			let res = ldap_initialize(&mut cldap, uri_cstring.as_ptr() as *const c_char);
 			if res != codes::results::LDAP_SUCCESS {
 				let raw_estr = ldap_err2string(res as c_int);
 				return Err(CStr::from_ptr(raw_estr).to_owned().into_string().unwrap());
@@ -106,8 +106,8 @@ impl RustLDAP {
 		//convert arguments to C-strings
 		let who_cstr 	= CString::new(who).unwrap();
 		let pass_cstr 	= CString::new(pass).unwrap();
-		let who_ptr 	= who_cstr.as_ptr() as *const c_uchar;
-		let pass_ptr 	= pass_cstr.as_ptr() as *const c_uchar;
+		let who_ptr 	= who_cstr.as_ptr() as *const c_char;
+		let pass_ptr 	= pass_cstr.as_ptr() as *const c_char;
 
 		//call ldap_bind and check for errors
 		unsafe {
@@ -140,16 +140,16 @@ impl RustLDAP {
 		let r_filter = match filter {
 			Some(fs) => {
 				filter_cstr = CString::new(fs).unwrap();
-				filter_cstr.as_ptr() as *const u8
+				filter_cstr.as_ptr()
 			},
 			None => ptr::null()
 		};
 
 		//Convert the vec of attributes into the null-terminated array that the library expects
 		//We also copy the strings into C-strings
-		let mut r_attrs: *const *const c_uchar = ptr::null();
+		let mut r_attrs: *const *const c_char = ptr::null();
 		let mut c_strs: Vec<CString> = Vec::new();
-		let mut r_attrs_ptrs: Vec<*const c_uchar> = Vec::new();
+		let mut r_attrs_ptrs: Vec<*const c_char> = Vec::new();
 
 		if let Some(strs) = attrs {
 			for string in strs {
@@ -158,7 +158,7 @@ impl RustLDAP {
 				c_strs.push(CString::new(string).unwrap());
 
 				//create a pointer to that CString's raw data and store it in r_attrs
-				r_attrs_ptrs.push(c_strs[c_strs.len() - 1].as_ptr() as *const c_uchar);
+				r_attrs_ptrs.push(c_strs[c_strs.len() - 1].as_ptr() as *const c_char);
 			}
 			r_attrs_ptrs.push(ptr::null()); //ensure that there is a null value at the end of the vec
 			r_attrs = r_attrs_ptrs.as_ptr();
@@ -179,7 +179,7 @@ impl RustLDAP {
 
 		//call into the C library and check for error
 		unsafe {
-			let res: i32 = ldap_search_ext_s(self.ldap_ptr, base.as_ptr() as *const c_uchar, scope as c_int,
+			let res: i32 = ldap_search_ext_s(self.ldap_ptr, base.as_ptr() as *const c_char, scope as c_int,
 												r_filter, r_attrs, attrsonly as c_int, r_serverctrls,
 												r_clientctrls, timeout, sizelimit as c_int, &mut ldap_msg);
 			if res != codes::results::LDAP_SUCCESS {
